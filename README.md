@@ -36,3 +36,17 @@ The server uses MongoDB to store user and match data. User data includes the use
 Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+Acknowledgments
+Node.js
+Express.js
+Socket.IO
+ws
+MongoDB
+Mongoose
+Passport.js
+jsonwebtoken
+bcryptjs
+dotenv
