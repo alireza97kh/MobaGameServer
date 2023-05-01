@@ -6,7 +6,8 @@ const Match = require('../schemas/matchSchema');
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types;
 
-const sendMessageToMatch = require('../server');
+const { sendToMatch } = require('../socket');
+const wss = require('../server');
 // Create WebSocket server
 const MaxCountOfPlayersInMatch = 2;
 
@@ -76,14 +77,14 @@ async function joinMatchmakingQueue(player) {
       console.log(updatedMatch, updatedMatch.players.length, MaxCountOfPlayersInMatch);
       
       if (updatedMatch && updatedMatch.players.length === MaxCountOfPlayersInMatch) {
-        console.log(sendMessageToMatch);
-        sendMessageToMatch(match.id, 'Go to select Hero', {});
+        console.log(sendToMatch);
+        sendToMatch(wss, match.id, 'Go to select Hero', {});
       }
       return updatedMatch;
   } else {
       const newMatch = await createMatch([player]);
       if (newMatch && newMatch.players.length === MaxCountOfPlayersInMatch) {
-        sendMessageToMatch(match.id, message);
+        sendToMatch(match.id, message);
       }
       return newMatch;
   }

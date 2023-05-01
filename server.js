@@ -28,7 +28,7 @@ mongoose.connect('mongodb://0.0.0.0:27017/Dobeil', { useNewUrlParser: true, useU
 // const Team = require('./schemas/teamSchema');
 
 // Connect to MongoDB
-const createWebSocketServer  = require('./socket');
+const { createWebSocketServer }  = require('./socket');
 
 // Create express app
 const app = express();
@@ -51,12 +51,8 @@ app.use('/matchMaking', matchMakingRoutes);
 
 const server = http.createServer(app);
 const wss = createWebSocketServer(server);
-module.exports = function sendMessageToMatch(matchId, message, data){
-  wss.sendToMatch(matchId, message, data);
-};
 
-
-
+module.exports = wss;
 // Start server
 const port = process.env.PORT || 3000;
 app.listen(port, '0.0.0.0', () => console.log(`Listening on port ${port}...`));

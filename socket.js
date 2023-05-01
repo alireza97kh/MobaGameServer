@@ -19,50 +19,6 @@ function createWebSocketServer(httpServer) {
       console.log('WebSocket message received: ', message);
 
       ws.send("Hi Client ");
-      // // Parse the incoming message as JSON
-      // let json;
-      // try {
-      //   json = JSON.parse(message);
-      // } catch (e) {
-      //   console.log('Invalid JSON');
-      //   return;
-      // }
-
-      // // Check the type of message
-      // switch (json.type) {
-      //   case 'join-match':
-      //     // Get the match ID from the message
-      //     let matchId = json.matchId;
-
-      //     // Check if the match exists
-      //     if (!matches.has(matchId)) {
-      //       console.log(`Match ${matchId} does not exist`);
-      //       return;
-      //     }
-
-      //     // Add the player to the match
-      //     let match = matches.get(matchId);
-      //     match.players.set(ws, {});
-
-      //     console.log(`Player joined match ${matchId}`);
-
-      //     // Send a message to all players in the match
-      //     sendToMatch(matchId, 'player-joined', { numPlayers: match.players.size });
-      //     break;
-      //   case 'create-match':
-      //     // Create a new match with a unique ID
-      //     let newMatchId = createMatchId();
-      //     matches.set(newMatchId, { id: newMatchId, players: new Map() });
-
-      //     console.log(`New match created with ID ${newMatchId}`);
-
-      //     // Send the new match ID back to the player
-      //     ws.send(JSON.stringify({ type: 'match-created', matchId: newMatchId }));
-      //     break;
-      //   default:
-      //     console.log('Unknown message type');
-      //     break;
-      // }
     });
 
     // Handle disconnections
@@ -88,17 +44,18 @@ function createWebSocketServer(httpServer) {
     return Math.random().toString(36).substr(2, 9);
   }
 
-  // Function to send a message to all players in a match
-  function sendToMatch(matchId, message, data) {
-    wss.clients.forEach((client) => {
-      if (client.matchId === matchId && client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ message, data }));
-      }
-    });
-  }
-
-  return { wss, sendToMatch };
+  // Export the WebSocket server and the matches map
+  return { wss, matches };
 }
 
-// Export the createWebSocketServer function
-module.exports = createWebSocketServer;
+// Function to send a message to all players in a match
+function sendToMatch(wss, matchId, message, data) {
+  wss.clients.forEach((client) => {
+    if (client.matchId === matchId && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ message, data }));
+    }
+  });
+}
+
+// Export the createWebSocketServer function and the sendToMatch function
+module.exports = { createWebSocketServer, sendToMatch };
