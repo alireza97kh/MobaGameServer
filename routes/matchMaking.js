@@ -7,7 +7,12 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types;
 
 const { Server } = require('socket.io');
-const MaxCountOfPlayersInMatch = 5;
+
+
+const WebSocketServer = require('ws');
+
+// Create WebSocket server
+const MaxCountOfPlayersInMatch = 2;
 
 // MatchMaking 
 // Create a new match
@@ -71,11 +76,22 @@ async function joinMatchmakingQueue(player) {
 
   const match = await Match.findOne({ isCompleted: false, $where: `this.players.length < ${MaxCountOfPlayersInMatch}` });
   if (match) {
-      return addPlayerToMatch(player, match);
+      const updatedMatch = await addPlayerToMatch(player, match);
+      console.log(updatedMatch, updatedMatch.players.length, MaxCountOfPlayersInMatch);
+      
+      if (updatedMatch && updatedMatch.players.length === MaxCountOfPlayersInMatch) {
+        WebSocketServer.sendToMatch(match.id, 'Go to select Hero', {});
+      }
+      return updatedMatch;
   } else {
-      return createMatch([player]);
+      const newMatch = await createMatch([player]);
+      if (newMatch && newMatch.players.length === MaxCountOfPlayersInMatch) {
+        WebSocketServer.sendToMatch(match.id, message);
+      }
+      return newMatch;
   }
 }
+
 
 // Leave matchmaking queue
 async function leaveMatchmakingQueue(player) {
