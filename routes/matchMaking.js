@@ -9,7 +9,7 @@ const { ObjectId } = require('mongoose').Types;
 const { Server } = require('socket.io');
 
 
-const wss = require('../server');
+const { wss, sendToMatch } = require('../socket');
 
 // Create WebSocket server
 const MaxCountOfPlayersInMatch = 2;
@@ -80,13 +80,13 @@ async function joinMatchmakingQueue(player) {
       console.log(updatedMatch, updatedMatch.players.length, MaxCountOfPlayersInMatch);
       
       if (updatedMatch && updatedMatch.players.length === MaxCountOfPlayersInMatch) {
-        wss.sendToMatch(match.id, 'Go to select Hero', {});
+        sendToMatch(match.id, 'Go to select Hero', {});
       }
       return updatedMatch;
   } else {
       const newMatch = await createMatch([player]);
       if (newMatch && newMatch.players.length === MaxCountOfPlayersInMatch) {
-        wss.sendToMatch(match.id, message);
+        sendToMatch(match.id, message);
       }
       return newMatch;
   }

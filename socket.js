@@ -89,19 +89,15 @@ function createWebSocketServer(httpServer) {
   }
 
   // Function to send a message to all players in a match
-  wss.sendToMatch = function sendToMatch(matchId, type, data) {
-    let match = matches.get(matchId);
-
-    if (!match) {
-      console.log(`Match ${matchId} does not exist`);
-      return;
-    }
-
-    for (let player of match.players.keys()) {
-      player.send(JSON.stringify({ type: type, ...data }));
-    }
+  function sendToMatch(matchId, message, data) {
+    wss.clients.forEach((client) => {
+      if (client.matchId === matchId && client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ message, data }));
+      }
+    });
   }
-  return wss;
+
+  return { wss, sendToMatch };
 }
 
 // Export the createWebSocketServer function
