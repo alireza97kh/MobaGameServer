@@ -51,7 +51,7 @@ app.use('/matchMaking', matchMakingRoutes);
 
 const server = http.createServer(app);
 const wss = createWebSocketServer(server);
-
+module.exports = wss;
 
 
 

@@ -18,50 +18,51 @@ function createWebSocketServer(httpServer) {
       let message = msg.toString();
       console.log('WebSocket message received: ', message);
 
-      // Parse the incoming message as JSON
-      let json;
-      try {
-        json = JSON.parse(message);
-      } catch (e) {
-        console.log('Invalid JSON');
-        return;
-      }
+      ws.send("Hi Client ");
+      // // Parse the incoming message as JSON
+      // let json;
+      // try {
+      //   json = JSON.parse(message);
+      // } catch (e) {
+      //   console.log('Invalid JSON');
+      //   return;
+      // }
 
-      // Check the type of message
-      switch (json.type) {
-        case 'join-match':
-          // Get the match ID from the message
-          let matchId = json.matchId;
+      // // Check the type of message
+      // switch (json.type) {
+      //   case 'join-match':
+      //     // Get the match ID from the message
+      //     let matchId = json.matchId;
 
-          // Check if the match exists
-          if (!matches.has(matchId)) {
-            console.log(`Match ${matchId} does not exist`);
-            return;
-          }
+      //     // Check if the match exists
+      //     if (!matches.has(matchId)) {
+      //       console.log(`Match ${matchId} does not exist`);
+      //       return;
+      //     }
 
-          // Add the player to the match
-          let match = matches.get(matchId);
-          match.players.set(ws, {});
+      //     // Add the player to the match
+      //     let match = matches.get(matchId);
+      //     match.players.set(ws, {});
 
-          console.log(`Player joined match ${matchId}`);
+      //     console.log(`Player joined match ${matchId}`);
 
-          // Send a message to all players in the match
-          sendToMatch(matchId, 'player-joined', { numPlayers: match.players.size });
-          break;
-        case 'create-match':
-          // Create a new match with a unique ID
-          let newMatchId = createMatchId();
-          matches.set(newMatchId, { id: newMatchId, players: new Map() });
+      //     // Send a message to all players in the match
+      //     sendToMatch(matchId, 'player-joined', { numPlayers: match.players.size });
+      //     break;
+      //   case 'create-match':
+      //     // Create a new match with a unique ID
+      //     let newMatchId = createMatchId();
+      //     matches.set(newMatchId, { id: newMatchId, players: new Map() });
 
-          console.log(`New match created with ID ${newMatchId}`);
+      //     console.log(`New match created with ID ${newMatchId}`);
 
-          // Send the new match ID back to the player
-          ws.send(JSON.stringify({ type: 'match-created', matchId: newMatchId }));
-          break;
-        default:
-          console.log('Unknown message type');
-          break;
-      }
+      //     // Send the new match ID back to the player
+      //     ws.send(JSON.stringify({ type: 'match-created', matchId: newMatchId }));
+      //     break;
+      //   default:
+      //     console.log('Unknown message type');
+      //     break;
+      // }
     });
 
     // Handle disconnections
@@ -88,7 +89,7 @@ function createWebSocketServer(httpServer) {
   }
 
   // Function to send a message to all players in a match
-  function sendToMatch(matchId, type, data) {
+  wss.sendToMatch = function sendToMatch(matchId, type, data) {
     let match = matches.get(matchId);
 
     if (!match) {
@@ -100,7 +101,6 @@ function createWebSocketServer(httpServer) {
       player.send(JSON.stringify({ type: type, ...data }));
     }
   }
-
   return wss;
 }
 
