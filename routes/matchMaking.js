@@ -7,7 +7,6 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types;
 
 const { sendToMatch } = require('../socket');
-const wss = require('../server');
 // Create WebSocket server
 const MaxCountOfPlayersInMatch = 2;
 
@@ -15,23 +14,30 @@ const MaxCountOfPlayersInMatch = 2;
 // Create a new match
 async function createMatch(players) {
   try {
+    const playerIds = players.map(player => mongoose.Types.ObjectId.isValid(player._id) ? new mongoose.Types.ObjectId(player._id) : null);
+    // filter out any invalid playerIds
+    const validPlayerIds = playerIds.filter(playerId => playerId !== null);
     const match = new Match({
-      players: players.map(player => player._id)
+      players: {
+        user: validPlayerIds
+      }
     });
     await match.save();
     return match;
   } catch(err) {
+    console.error(err);
     return null;
   }
 }
 
+
 // Add player to match
 async function addPlayerToMatch(player, match) {
   if (match.players.length === MaxCountOfPlayersInMatch) return null;
-  if (match.players.some(p => p.id == player._id)) {
+  if (match.players.some(p => p.id == player.id)) {
       return match;
   }
-  match.players.push(player._id);
+  match.players.push(player.id);
   await match.save();
 
   if (match.players.length === MaxCountOfPlayersInMatch) {
@@ -44,7 +50,7 @@ async function addPlayerToMatch(player, match) {
 
 // Remove player from match
 async function removePlayerFromMatch(player, match) {
-  const index = match.players.findIndex(p => p.equals(player._id));
+  const index = match.players.findIndex(p => p.equals(player.id));
   if (index < 0) return null;
 
   match.players.splice(index, 1);
@@ -60,7 +66,8 @@ async function removePlayerFromMatch(player, match) {
 
 // Check if player is in a match and remove them if they are not completed
 async function checkIfPlayerInMatch(player) {
-  const match = await Match.findOne({ players: player._id, isCompleted: false });
+  let objID = new ObjectId(player.id);
+  const match = await Match.findOne({ players: objID, isCompleted: false });
   if (match) {
     await removePlayerFromMatch(player, match);
   }
@@ -74,17 +81,16 @@ async function joinMatchmakingQueue(player) {
   const match = await Match.findOne({ isCompleted: false, $where: `this.players.length < ${MaxCountOfPlayersInMatch}` });
   if (match) {
       const updatedMatch = await addPlayerToMatch(player, match);
-      console.log(updatedMatch, updatedMatch.players.length, MaxCountOfPlayersInMatch);
+      //console.log(updatedMatch, updatedMatch.players.length, MaxCountOfPlayersInMatch);
       
       if (updatedMatch && updatedMatch.players.length === MaxCountOfPlayersInMatch) {
-        console.log(sendToMatch);
-        sendToMatch(wss, match.id, 'Go to select Hero', {});
+        sendToMatch(match.id, 'GO_TO_SELECT_HERO', null);
       }
       return updatedMatch;
   } else {
       const newMatch = await createMatch([player]);
       if (newMatch && newMatch.players.length === MaxCountOfPlayersInMatch) {
-        sendToMatch(match.id, message);
+        sendToMatch(match.id, 'GO_TO_SELECT_HERO', null);
       }
       return newMatch;
   }
@@ -97,7 +103,7 @@ async function leaveMatchmakingQueue(player) {
     status: 'incomplete',
     players: {
       $elemMatch: {
-        _id: player._id
+        _id: player.id
       }
     }
   });
