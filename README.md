@@ -1,3 +1,6 @@
+everything you see has written by chatGTP
+
+
 MobaGameServer
 MobaGameServer is a Node.js server for a multiplayer online battle arena (MOBA) game. It uses Express for HTTP routing, WebSocket for real-time communication, and MongoDB for data storage.
 
