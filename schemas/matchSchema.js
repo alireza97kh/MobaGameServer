@@ -5,20 +5,25 @@ const matchSchema = new mongoose.Schema({
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      //required: true
+      required: true
     },
-    hero: {
-      type: mongoose.Schema.Types.ObjectId,
+    userName: {
+      type: String,
+      default: ''
+    },
+    heroName: {
+      type: String,
       ref: 'Hero',
-      //required: true
+      default: ''
     },
     team: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Team',
+      type: Number,
+      default: 0
       //required: true
     },
     isWinner: {
       type: Boolean,
+      default: false
       //required: true
     }
   }],
@@ -50,6 +55,14 @@ const matchSchema = new mongoose.Schema({
   duration: {
     type: Number,
     default: 0
+  },
+  gameMode:{
+    type: String,
+    default: 'OneVsOne'
+  },
+  countOfPlayers:{
+    type: Number,
+    default: 2
   }
 });
 

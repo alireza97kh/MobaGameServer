@@ -19,7 +19,8 @@ async function createMatch(players) {
     const validPlayerIds = playerIds.filter(playerId => playerId !== null);
     const match = new Match({
       players: {
-        user: validPlayerIds
+        user: validPlayerIds,
+        userName: players[0].username,
       }
     });
     await match.save();
@@ -37,7 +38,11 @@ async function addPlayerToMatch(player, match) {
   if (match.players.some(p => p.id == player.id)) {
       return match;
   }
-  match.players.push(player.id);
+  match.players.push({
+    user: player.id,
+    userName: player.username,
+    team: match.players.length % 2,
+  });
   await match.save();
 
   if (match.players.length === MaxCountOfPlayersInMatch) {
@@ -50,7 +55,7 @@ async function addPlayerToMatch(player, match) {
 
 // Remove player from match
 async function removePlayerFromMatch(player, match) {
-  const index = match.players.findIndex(p => p.equals(player.id));
+  const index = match.players.findIndex(p => p.user.equals(player.id));
   if (index < 0) return null;
 
   match.players.splice(index, 1);
@@ -67,7 +72,7 @@ async function removePlayerFromMatch(player, match) {
 // Check if player is in a match and remove them if they are not completed
 async function checkIfPlayerInMatch(player) {
   let objID = new ObjectId(player.id);
-  const match = await Match.findOne({ players: objID, isCompleted: false });
+  const match = await Match.findOne({ 'players.user' : objID, isCompleted: false });
   if (match) {
     await removePlayerFromMatch(player, match);
   }
@@ -82,16 +87,17 @@ async function joinMatchmakingQueue(player) {
   if (match) {
       const updatedMatch = await addPlayerToMatch(player, match);
       //console.log(updatedMatch, updatedMatch.players.length, MaxCountOfPlayersInMatch);
-      
-      if (updatedMatch && updatedMatch.players.length === MaxCountOfPlayersInMatch) {
-        sendToMatch(match.id, 'GO_TO_SELECT_HERO', null);
-      }
+      // console.log('bingoooo *&*&*&*& ', updatedMatch.players.length, updatedMatch.countOfPlayers);
+      // if (updatedMatch && updatedMatch.players.length === updatedMatch.countOfPlayers) {
+      //   console.log('send Select Hero ');
+      //   sendToMatch(match.id, 'GO_TO_SELECT_HERO', null);
+      // }
       return updatedMatch;
   } else {
       const newMatch = await createMatch([player]);
-      if (newMatch && newMatch.players.length === MaxCountOfPlayersInMatch) {
-        sendToMatch(match.id, 'GO_TO_SELECT_HERO', null);
-      }
+      // if (newMatch && newMatch.players.length === newMatch.countOfPlayers) {
+      //   sendToMatch(match.id, 'GO_TO_SELECT_HERO', null);
+      // }
       return newMatch;
   }
 }
@@ -123,7 +129,11 @@ router.get('/joinMatch', async (req, res) => {
           success: true,
           result: {
               match: match,
-              address: 'ws://127.0.0.1:4000'
+              TCPAddress: 'ws://192.168.1.84:4000',
+              UDPAddress: '192.168.1.84',
+              UDPPort: 8080,
+              // address: 'ws://192.168.1.84:4000',
+
           }
       });
   } else {

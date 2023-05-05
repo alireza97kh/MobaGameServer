@@ -28,8 +28,7 @@ mongoose.connect('mongodb://0.0.0.0:27017/Dobeil', { useNewUrlParser: true, useU
 // const Team = require('./schemas/teamSchema');
 
 // Connect to MongoDB
-const { createWebSocketServer }  = require('./socket');
-
+const { createWebSocketServer, CreateUDPServer }  = require('./socket');
 // Create express app
 const app = express();
 // Add middleware
@@ -41,6 +40,7 @@ const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
 const heroRoutes = require('./routes/heroRoutes');
 const friendRoutes = require('./routes/friendRouter');
+const matchRoutes = require('./routes/MatchRoutes');
 const matchMakingRoutes = require('./routes/matchMaking')
 
 app.use('/', authRoutes);
@@ -48,14 +48,16 @@ app.use('/items', itemRoutes);
 app.use('/heroes', heroRoutes);
 app.use('/friend', friendRoutes);
 app.use('/matchMaking', matchMakingRoutes);
+app.use('/match', matchRoutes);
 
 const server = http.createServer(app);
 const wss = createWebSocketServer(server);
+const udp = CreateUDPServer();
 
 module.exports = wss;
 // Start server
 const port = process.env.PORT || 3000;
-app.listen(port, '0.0.0.0', () => console.log(`Listening on port ${port}...`));
+app.listen(port, '192.168.1.84', () => console.log(`Listening on port ${port}...`));
 const socketPort = process.env.PORT || 4000;
 server.listen(socketPort, () => {
   console.log('Server started on port:', socketPort);
