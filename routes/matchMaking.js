@@ -109,7 +109,7 @@ async function leaveMatchmakingQueue(player) {
     status: 'incomplete',
     players: {
       $elemMatch: {
-        _id: player.id
+        user: new ObjectId(player.id)
       }
     }
   });
@@ -150,7 +150,7 @@ router.get('/leaveMatch', async (req, res) => {
     success: false,
     message: 'Player not found.'
   });
-
+  
   const match = await leaveMatchmakingQueue(player);
   if (!match) {
       res.send({ 

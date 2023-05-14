@@ -4,8 +4,12 @@ const Match = require('./schemas/matchSchema');
 const { ObjectId } = require('mongodb');
 const dgram = require('node:dgram');
 const { match } = require('node:assert');
+const { Console } = require('node:console');
+const { logToFile, clearLogFile } = require('./Log');
 const server = dgram.createSocket('udp4');
 const matches = new Map();
+let totalBytesReceivedTCP = 0;
+let totalBytesReceivedUDP = 0;
 // Create a function that accepts an HTTP server and returns a WebSocket server
 function createWebSocketServer(httpServer) {
   // Create a new WebSocket server
@@ -15,9 +19,17 @@ function createWebSocketServer(httpServer) {
   // Set up event listeners
   wss.on('connection',function connection(ws) {
     console.log('WebSocket connected');
+    clearLogFile('DataSend');
+    clearLogFile('ReciveDate');
     ws.on('message', async function incoming(msg) {
       let message = msg.toString();
-      // console.log('WebSocket message received: ', message);
+      totalBytesReceivedTCP += Buffer.byteLength(message);
+
+      if(message.endsWith(':'))
+        message = message.substring(0,message.length-1);
+      
+
+      logToFile('WebSocket message received: ' + message + '  -> From: ' + ws.userId, 'ReciveDate');
       let splitedMessage = message.split(':');
       if(splitedMessage[0] == 'ID'){
         if(splitedMessage.length == 3){
@@ -36,18 +48,23 @@ function createWebSocketServer(httpServer) {
         Calculate_Master_Client(ws);
       }
       else if(splitedMessage[0] == 'NEW_CREEP_ACTIVATED' || splitedMessage[0] == 'NEW_CREEP_CREATED'){
-        console.log(message);
         sendToMatch(ws.matchId, message, null);
       }
-      // else if(splitedMessage[0] == 'position' || splitedMessage[0] == 'rotation'){
-      //   SendToOtherPlayersInMatch(ws.matchId, message, null, ws);
-      // }
-
+      else if(splitedMessage[0] == 'ANIMATION'){
+        sendToMatch(ws.matchId, message, null);
+      }
+      else {
+        // if(splitedMessage[0] == 'TOWER')
+        //   console.log(message);
+        sendToMatch(ws.matchId, message, null);
+      }
     });
 
     // Handle disconnections
     ws.on('close', async function close() {
-      console.log('WebSocket disconnected');
+      console.log('WebSocket disconnected ', ws.userId);
+      logToFile('\n---------- End of WebSocket and DC----------\nTCP Bytes :' + totalBytesReceivedTCP + '  UDP Bytes :' + totalBytesReceivedUDP, 'ReciveDate');
+      logToFile('\n---------- End of WebSocket and DC----------\n', 'DataSend');
       await Match.deleteOne({_id: new ObjectId(ws.matchId)});
       
       // Remove the player from all matches
@@ -75,6 +92,8 @@ function CreateUDPServer(){
       
       server.on('message', (msg, rinfo) => {
         let message = msg.toString();
+        totalBytesReceivedUDP += Buffer.byteLength(message);
+        logToFile('UDP Message: '+ message + ' -> From : ' + server.userId, 'ReciveDate');
         let splitedMessage = message.split(':');
         if(message.split(':')[0] == 'PING'){
           server.send('PONG:' + message.split(':')[1], rinfo.port, rinfo.address);
@@ -83,10 +102,9 @@ function CreateUDPServer(){
         else if(splitedMessage[0] == 'ID'){
           CheckIDInStartAndAddToMatchesForUDP(server, splitedMessage, rinfo);
         }
-        if(message.split(':')[0] == 'transform' && server.matchId){
+        else{
+          // console.log(message);
           sendToMatchByUDP(server.matchId, message, null);
-          // sendToMatchByUDP(server.matchId, message, null);
-          // if()
         }
         // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
       });
@@ -112,7 +130,7 @@ function sendToMatch(matchId, message, data = null) {
     // console.log('Match not found:', matchId);
     return;
   }
-  // console.log('sendToMatch : ' + matchId , message, data + '\n');
+  logToFile('Send Data With TCP : ' + message + '  Data : ' + data + '  to match :' + matchId, 'DataSend');
   matches.get(matchId).players.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       if(data)
@@ -125,9 +143,10 @@ function sendToMatch(matchId, message, data = null) {
 function sendToMatchByUDP(matchId, message, data = null) {
   const match = matches.get(matchId);
   if (!match) {
-    // console.log('Match not found:', matchId);
+    // logToFile('Match not found:', matchId);
     return;
   }
+  logToFile('Send Data With UDP : ' + message + '  Data : ' + data + '  to match :' + matchId, 'DataSend');
   matches.get(matchId).UDPServers.forEach((element) => {
     if(data)
     element.server.send(message + ':' + data, element.rinfo.port, element.rinfo.address);
@@ -185,17 +204,16 @@ async function CheckIDInStartAndAddToMatches(splitedMessage, ws){
       matches.set(temp.id, temp);
     }
     ws.matchId = matchId;
+    ws.userId = splitedMessage[1];
     sendToMatch(matchId, 'NEW_PLAYER:' + ws.userId);
     let currentMatch = matches.get(matchId);
-    // console.log(currentMatch, '\n', currentMatch.players, '\n');
     if(currentMatch.match.countOfPlayers === currentMatch.players.length){
-      console.log('\n -------- GO TO SELECT HERO ---------- \n');
       sendToMatch(matchId, 'GO_TO_SELECT_HERO:' + ws.userId);
     }
   }
-  else {
-    console.log('Else Bingooo ');
-  }
+  // else {
+  //   console.log('Else Bingooo ');
+  // }
 }
 
 async function CheckIDInStartAndAddToMatchesForUDP(server, splitedMessage, rinfo){
@@ -219,7 +237,7 @@ async function CheckIDInStartAndAddToMatchesForUDP(server, splitedMessage, rinfo
   }
 
   server.matchId = matchId;
-
+  server.userId = splitedMessage[2];
   sendToMatchByUDP(matchId, "ID_VALIDATED:" + splitedMessage[2], null);
 }
 
@@ -265,7 +283,7 @@ function Calculate_Master_Client(ws){
   let selectedIndex = -1;
   let maxPing = 1000;
   for(let i = 0; i < _match.players.length; i++){
-    if(_match.players[i].ping && _match.players[i].userId != '642585785dc4948057b45979'){
+    if(_match.players[i].ping && _match.players[i].userId == '642585785dc4948057b45979'){
       if(_match.players[i].ping < maxPing){
         maxPing = _match.players[i].ping;
         selectedIndex = i;
