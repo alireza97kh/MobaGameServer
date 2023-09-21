@@ -50,17 +50,17 @@ app.use('/friend', friendRoutes);
 app.use('/matchMaking', matchMakingRoutes);
 app.use('/match', matchRoutes);
 
-const server = http.createServer(app);
-const wss = createWebSocketServer(server);
-const udp = CreateUDPServer();
+// const server = http.createServer(app);
+// const wss = createWebSocketServer(server);
+// const udp = CreateUDPServer();
 
-module.exports = wss;
-// Start server
+// module.exports = wss;
+// // Start server
 const port = process.env.PORT || 3000;
-app.listen(port, '192.168.1.84', () => console.log(`Listening on port ${port}...`));
-const socketPort = process.env.PORT || 4000;
-server.listen(socketPort, () => {
-  console.log('Server started on port:', socketPort);
-});
+app.listen(port, '192.168.223.20', () => console.log(`Listening on port ${port}...`));
+// const socketPort = process.env.PORT || 4000;
+// server.listen(socketPort, () => {
+//   console.log('Server started on port:', socketPort);
+// });
   
 

@@ -37,7 +37,6 @@ router.put('/signup', async (req, res) => {
 // Login route OK
 router.put('/login', async (req, res) => {
 try {
-    // console.log("user try to Login");
     const { username, password } = req.body;
     // Find the user in the database
     const user = await User.findOne({ username });

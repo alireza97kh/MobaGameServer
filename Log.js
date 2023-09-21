@@ -11,7 +11,8 @@ function logToFile(message, LogfileName) {
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const seconds = date.getSeconds().toString().padStart(2, '0');
     const formattedDate = `${year}/${month}/${day} -> ${hours}:${minutes}:${seconds}`;
-    const logLine = `${formattedDate}: ${message}\n`;
+    // const logLine = `${formattedDate}: ${message}\n`;
+    const logLine = `${message}\n`;
 
     fs.appendFile(LogfileName + '.txt', logLine, (err) => {
         if (err) {

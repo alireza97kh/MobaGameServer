@@ -62,7 +62,7 @@ const matchSchema = new mongoose.Schema({
   },
   countOfPlayers:{
     type: Number,
-    default: 2
+    default: 1
   }
 });
 

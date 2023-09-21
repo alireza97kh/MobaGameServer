@@ -29,7 +29,7 @@ function createWebSocketServer(httpServer) {
         message = message.substring(0,message.length-1);
       
 
-      logToFile('WebSocket message received: ' + message + '  -> From: ' + ws.userId, 'ReciveDate');
+      logToFile(message + '  WebSocket', 'ReciveDate');
       let splitedMessage = message.split(':');
       if(splitedMessage[0] == 'ID'){
         if(splitedMessage.length == 3){
@@ -93,7 +93,7 @@ function CreateUDPServer(){
       server.on('message', (msg, rinfo) => {
         let message = msg.toString();
         totalBytesReceivedUDP += Buffer.byteLength(message);
-        logToFile('UDP Message: '+ message + ' -> From : ' + server.userId, 'ReciveDate');
+        logToFile(message, 'ReciveDate');
         let splitedMessage = message.split(':');
         if(message.split(':')[0] == 'PING'){
           server.send('PONG:' + message.split(':')[1], rinfo.port, rinfo.address);
@@ -115,7 +115,7 @@ function CreateUDPServer(){
       });
       
       server.bind({
-        address: '192.168.1.84',
+        address: '192.168.223.20',
         port: 8080,
         exclusive: true
       });
@@ -207,6 +207,7 @@ async function CheckIDInStartAndAddToMatches(splitedMessage, ws){
     ws.userId = splitedMessage[1];
     sendToMatch(matchId, 'NEW_PLAYER:' + ws.userId);
     let currentMatch = matches.get(matchId);
+    console.log(currentMatch.match.countOfPlayers + '\n' + currentMatch.players.length);
     if(currentMatch.match.countOfPlayers === currentMatch.players.length){
       sendToMatch(matchId, 'GO_TO_SELECT_HERO:' + ws.userId);
     }

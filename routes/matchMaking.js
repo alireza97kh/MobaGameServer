@@ -5,6 +5,9 @@ const User = require('../schemas/userSchema');
 const Match = require('../schemas/matchSchema');
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types;
+const os = require('os');
+const networkInterfaces = os.networkInterfaces();
+
 
 const { sendToMatch } = require('../socket');
 // Create WebSocket server
@@ -125,15 +128,14 @@ router.get('/joinMatch', async (req, res) => {
 
   const match = await joinMatchmakingQueue(player);
   if (match) {
+    let currentServerIp = GetMyServerIP();
       res.send({
           success: true,
           result: {
               match: match,
-              TCPAddress: 'ws://192.168.1.84:4000',
-              UDPAddress: '192.168.1.84',
-              UDPPort: 8080,
-              // address: 'ws://192.168.1.84:4000',
-
+              TCPAddress: 'ws://' + currentServerIp + ':4000',
+              UDPAddress: currentServerIp,
+              UDPPort: 8000,
           }
       });
   } else {
@@ -163,5 +165,16 @@ router.get('/leaveMatch', async (req, res) => {
       });
   }
 });
+
+function GetMyServerIP(){
+  const ipAddress = Object.values(networkInterfaces)
+  .flat()
+  .filter((iface) => iface.family === 'IPv4' && !iface.internal)
+  .map((iface) => iface.address);
+  console.log('Server IP address:', ipAddress[0]);
+  return ipAddress[0];
+}
+
+
 
 module.exports = router;
