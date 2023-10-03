@@ -4,25 +4,27 @@ const router  = express.Router();
 const Match = require('../schemas/matchSchema');
 const { ObjectId } = require('mongodb');
 
-router.get('/getPlayersInMatch', async (req, res) => {
-    // const playerID = req.query.id;
-    const matchId = req.query.matchId;
-    let objID = new ObjectId(matchId);
-    const match = await Match.findOne({ _id: objID });
-    if(match){
-        res.send({
-            success: true,
-            result: {
-                match
-            }
-        })
+router.put('/getMatch', async (req, res) => {
+    const match = await Match.findOne({ 
+      _id: new ObjectId(req.body.matchId),
+      players: {
+        $elemMatch: {
+        user: new ObjectId(req.body.userId)
+      }
+    }});
+    if (!match) {
+      return res.status(404).send({
+        success : false,
+        message : 'Match not found!'
+      });
     }
     else {
-        res.send({
-            success: false,
-            message: 'User is not in any match!'
-        })
+      return res.send({
+        success :true ,
+        result : {
+            match : match
+        }
+      });
     }
-});
-
+  });
 module.exports = router;

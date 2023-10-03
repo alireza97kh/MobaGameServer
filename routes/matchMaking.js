@@ -132,7 +132,7 @@ router.get('/joinMatch', async (req, res) => {
       res.send({
           success: true,
           result: {
-              match: match,
+              matchId: match.id,
               TCPAddress: 'ws://' + currentServerIp + ':4000',
               UDPAddress: currentServerIp,
               UDPPort: 8080,
@@ -161,9 +161,21 @@ router.get('/leaveMatch', async (req, res) => {
   } else {
       res.send({
         success: true,
-        match: match
+        result : {
+          match: match
+        }
       });
   }
+});
+
+
+
+router.get('/deleteAllMatch', async (req, res) =>{
+  console.log("delete Matches");
+  const match = await Match.deleteMany();
+  res.send({
+    success: true
+  });
 });
 
 function GetMyServerIP(){
@@ -174,6 +186,7 @@ function GetMyServerIP(){
   console.log('Server IP address:', ipAddress[0]);
   return ipAddress[0];
 }
+
 
 
 
