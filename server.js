@@ -35,6 +35,7 @@ const app = express();
 app.use(express.json());
 app.use(bodyParser.json());
 
+const GetMyServerIP = require('./routes/matchMaking');
 
 const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
@@ -47,7 +48,7 @@ app.use('/', authRoutes);
 app.use('/items', itemRoutes);
 app.use('/heroes', heroRoutes);
 app.use('/friend', friendRoutes);
-app.use('/matchMaking', matchMakingRoutes);
+app.use('/matchMaking', matchMakingRoutes.router);
 app.use('/match', matchRoutes);
 
 // const server = http.createServer(app);
@@ -57,7 +58,8 @@ app.use('/match', matchRoutes);
 // module.exports = wss;
 // // Start server
 const port = process.env.PORT || 3000;
-app.listen(port, '192.168.223.20', () => console.log(`Listening on port ${port}...`));
+let serverIp = GetMyServerIP.GetMyServerIP();
+app.listen(port, serverIp, () => console.log(`Listening on port ${port}...`));
 // const socketPort = process.env.PORT || 4000;
 // server.listen(socketPort, () => {
 //   console.log('Server started on port:', socketPort);

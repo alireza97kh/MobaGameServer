@@ -135,7 +135,7 @@ router.get('/joinMatch', async (req, res) => {
               matchId: match.id,
               TCPAddress: 'ws://' + currentServerIp + ':4000',
               UDPAddress: currentServerIp,
-              UDPPort: 1234,
+              UDPPort: 4321,
           }
       });
   } else {
@@ -190,4 +190,4 @@ function GetMyServerIP(){
 
 
 
-module.exports = router;
+module.exports = {router, GetMyServerIP};
