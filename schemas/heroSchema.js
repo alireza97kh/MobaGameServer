@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const heroSchema = new mongoose.Schema({
+    heroId: {
+      type: Number,
+      required: true
+    },
     name: {
       type: String,
       required: true

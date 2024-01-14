@@ -133,9 +133,8 @@ router.get('/joinMatch', async (req, res) => {
           success: true,
           result: {
               matchId: match.id,
-              TCPAddress: 'ws://' + currentServerIp + ':4000',
               UDPAddress: currentServerIp,
-              UDPPort: 4321,
+              UDPPort: 1234,
           }
       });
   } else {
